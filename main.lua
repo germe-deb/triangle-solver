@@ -21,11 +21,6 @@ local font_scp_32 = love.graphics.newFont("assets/fonts/SourceCodePro-Regular.ot
 
 -- teclado de android
 local keyboardOpen = false
-local keyboardType = {
-    default = 0,
-    number = 2,  -- Teclado numérico
-    decimal = 3  -- Teclado numérico con decimal
-}
 
 -- vertices del triangulo
 local vertices = {0, 0, 0, 0, 0, 0}
@@ -81,7 +76,9 @@ function DrawButton(x, y, w, h, r, g, b, id, text)
       if displayText == "" then
           displayText = "Toca para editar"
       end
-      Textocentrado(displayText, x + w/2, y + h/2, font_scp_16, id)
+      -- Usar fuente más pequeña para textos largos
+      local fuente = (#displayText > 10) and font_scp_16 or font_scp_32
+      Textocentrado(displayText, x + w/2, y + h/2, fuente, id)
   else
       Textocentrado(text, x + w/2, y + h/2)
   end
@@ -298,8 +295,8 @@ end
 
 function love.textinput(text)
     if keyboardOpen and #inputText < maxInputLength then
-        -- Solo permitir números, punto decimal y signo negativo
-        if text:match("[0-9%-%.]") then
+        -- Solo permitir números, símbolos matemáticos, 'e' y paréntesis
+        if text:match("[0-9%-%+%.,×÷=%%√πθ°e%(%)]") then
             inputText = inputText .. text
         end
     end
@@ -366,13 +363,7 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
     if touchX >= 12*ui_unit.x and touchX <= 92*ui_unit.x and
        touchY >= 89*ui_unit.y and touchY <= 99*ui_unit.y then
         if not keyboardOpen then
-            love.keyboard.setTextInput(true, 
-                safe_x,
-                safe_y + 89*ui_unit.y,
-                safe_w,
-                10*ui_unit.y,
-                keyboardType.decimal  -- Usar el tipo decimal
-            )
+            love.keyboard.setTextInput(true)
             keyboardOpen = true
         end
         return
