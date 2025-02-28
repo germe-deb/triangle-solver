@@ -29,6 +29,55 @@ local keyboardOpen = false
 local keyboardOffset = 0
 local keyboardHeight = 0
 
+local ui_button_1 = {
+    min_x = 0,
+    max_x = 33.33,  -- safe_w/3
+    min_y = 15,     -- safe_h * 0.15
+    max_y = 30      -- min_y + buttonsizeH
+}
+
+local ui_button_2 = {
+    min_x = 33.33,
+    max_x = 66.66,
+    min_y = 15,
+    max_y = 30
+}
+
+local ui_button_3 = {
+    min_x = 66.66,
+    max_x = 100,
+    min_y = 15,
+    max_y = 30
+}
+
+local ui_button_4 = { -- ocultar teclado 1
+    min_x = 1,
+    max_x = 99,
+    min_y = 101,
+    max_y = 135
+}
+
+local ui_button_5 = {
+    min_x = 1,
+    max_x = 89,     -- Esta será ajustada dinámicamente en DrawNavUi
+    min_y = 89,
+    max_y = 99
+}
+
+local ui_button_6 = {
+    min_x = 89,     -- Esta será ajustada dinámicamente en DrawNavUi
+    max_x = 99,
+    min_y = 89,
+    max_y = 99
+}
+
+local ui_button_7 = { -- ocultar teclado 2
+    min_x = 0,
+    max_x = 100,
+    min_y = 31,
+    max_y = 88
+}
+
 -- vertices del triangulo
 local vertices = {0, 0, 0, 0, 0, 0}
 local scaledVertices = {}
@@ -38,93 +87,116 @@ local inputText = ""
 local selectedInput = nil -- Para saber qué estamos editando (lado o ángulo)
 local maxInputLength = 10 -- Limitar longitud del texto
 
--- dibujar botones para seleccionar entre los 3 tipos de triángulos
+-- Modificar la función DrawTriTypeSelect para usar estas variables
 function DrawTriTypeSelect()
-  local buttonsizeW = safe_w / 3
-  local buttonsizeH = buttonsizeW * 0.7
-  if buttonsizeH > safe_h * 0.18 then
-    buttonsizeH = safe_h * 0.18
-  end
-  local buttonposY = safe_h * 0.15
-  local buttonLabels = {"Rect.", "Equil.", "Escal."}
-
-  for i = 0, 2 do
-    DrawButton(buttonsizeW * i, buttonposY, buttonsizeW, buttonsizeH, 1, 1, 1, i+1, buttonLabels[i + 1])
-  end
+    local buttonLabels = {"Rect.", "Equil.", "Escal."}
+    local buttons = {ui_button_1, ui_button_2, ui_button_3}
+    
+    for i, button in ipairs(buttons) do
+        DrawButton(button.min_x*ui_unit.x, button.min_y*ui_unit.y,
+                  (button.max_x-button.min_x)*ui_unit.x,
+                  (button.max_y-button.min_y)*ui_unit.y,
+                  1, 1, 1, i, buttonLabels[i])
+    end
 end
 
+-- Modificar la función DrawNavUi
 function DrawNavUi()
-  DrawButton(1*ui_unit.x, 89*ui_unit.y, 10*ui_unit.x, 10*ui_unit.y, 1, 1, 1, 4, "Hide")
-  DrawButton(11*ui_unit.x, 89*ui_unit.y, 78*ui_unit.x, 10*ui_unit.y, 1, 1, 1, 5, "Show Keyboard")
-  DrawButton(89*ui_unit.x, 89*ui_unit.y, 10*ui_unit.x, 10*ui_unit.y, 1, 1, 1, 6, "Send")
+    -- Botón Hide (id == 4)
+    DrawButton(ui_button_4.min_x*ui_unit.x, ui_button_4.min_y*ui_unit.y, 
+               (ui_button_4.max_x-ui_button_4.min_x)*ui_unit.x, 
+               (ui_button_4.max_y-ui_button_4.min_y)*ui_unit.y, 
+               1, 1, 1, 4, "Hide")
+
+    -- Calcular el ancho del botón 6 (igual a su alto)
+    local button6_height = (ui_button_6.max_y - ui_button_6.min_y) * ui_unit.y
+    local button6_width = button6_height  -- El ancho será igual al alto
+    
+    -- Ajustar la posición X del botón 6
+    local button6_x = 99 * ui_unit.x - button6_width
+    
+    -- Ajustar el ancho del botón 5 para que termine donde empieza el botón 6
+    local button5_width = button6_x - (ui_button_5.min_x * ui_unit.x)
+    
+    -- Dibujar botón 5 (Show Keyboard)
+    DrawButton(ui_button_5.min_x*ui_unit.x, ui_button_5.min_y*ui_unit.y,
+               button5_width,
+               (ui_button_5.max_y-ui_button_5.min_y)*ui_unit.y,
+               1, 1, 1, 5, "Show Keyboard")
+    
+    -- Dibujar botón 6 (Send)
+    DrawButton(button6_x, ui_button_6.min_y*ui_unit.y,
+               button6_width,
+               (ui_button_6.max_y-ui_button_6.min_y)*ui_unit.y,
+               1, 1, 1, 6, "Send")
 end
 
 -- pos x, pos y, ancho, alto, r, g, b, id, texto
 function DrawButton(x, y, w, h, r, g, b, id, text)
-  love.graphics.push("all")
+    love.graphics.push("all")
 
-  local offsetx, offsety = Centrado(w, h, w*0.95, h*0.95)
+    local offsetx, offsety = Centrado(w, h, w*0.95, h*0.95)
 
-  if id <= 3 and id == TriState then
-    love.graphics.setColor(r,g,b, 0.2)
-    love.graphics.rectangle("fill", x + offsetx, y + offsety, w*0.95, h*0.95)
-    love.graphics.setColor(1, 1, 1, 1)
-  else
-    love.graphics.setColor(r,g,b, 1)
-    love.graphics.rectangle("fill", x + offsetx, y + offsety, w*0.95, h*0.95)
-    love.graphics.setColor(0, 0.19, 0.26, 1)
-  end
-  
-  -- setear la fuente grande
-  love.graphics.setFont(font_scp_32)
-  -- Mostrar el texto de entrada si es el botón 5
-  if id == 5 then
-      local displayText = inputText
-      if displayText == "" then
-          if selectedInput then
-              displayText = selectedInput .. ": editar..."
-          else
-              displayText = "Toca para editar"
-          end
-      else
-          if selectedInput then
-              displayText = selectedInput .. ": " .. inputText
-              -- Añadir el símbolo de grado si es un ángulo
-              if selectedInput:match("[ABC]") then
-                  displayText = displayText .. "°"
-              end
-          end
-      end
-      -- Usar fuente más pequeña para textos largos
-      local fuente = (#displayText > 10) and font_scp_16 or font_scp_32
-      Textocentrado(displayText, x + w/2, y + h/2, fuente, id)
-  else
-      Textocentrado(text, x + w/2, y + h/2)
-  end
-  love.graphics.pop()
+    if id <= 3 and id == TriState then
+        love.graphics.setColor(r,g,b, 0.2)
+        love.graphics.rectangle("fill", x + offsetx, y + offsety, w*0.95, h*0.95)
+        love.graphics.setColor(1, 1, 1, 1)
+    else
+        love.graphics.setColor(r,g,b, 1)
+        love.graphics.rectangle("fill", x + offsetx, y + offsety, w*0.95, h*0.95)
+        love.graphics.setColor(0, 0.19, 0.26, 1)
+    end
+    
+    -- setear la fuente grande
+    love.graphics.setFont(font_scp_32)
+    -- Mostrar el texto de entrada si es el botón 5
+    if id == 5 then
+        local displayText = inputText
+        if displayText == "" then
+            if selectedInput then
+                displayText = "editar " .. selectedInput
+            else
+                displayText = "Pulsa un lado o un vértice"
+            end
+        else
+            if selectedInput then
+                displayText = selectedInput .. ": " .. inputText
+                -- Añadir el símbolo de grado si es un ángulo
+                if selectedInput:match("[ABC]") then
+                    displayText = displayText .. "°"
+                end
+            end
+        end
+        -- Usar fuente más pequeña para textos largos
+        local fuente = (#displayText > 10) and font_scp_16 or font_scp_32
+        Textocentrado(displayText, x + w/2, y + h/2, fuente, id)
+    else
+        Textocentrado(text, x + w/2, y + h/2)
+    end
+    love.graphics.pop()
 end
 
 -- función generada por copilot
 function GetTriangleDimensions(vertices)
-  local minX, maxX = math.huge, -math.huge
-  local minY, maxY = math.huge, -math.huge
+    local minX, maxX = math.huge, -math.huge
+    local minY, maxY = math.huge, -math.huge
 
-  -- Encontrar los valores extremos
-  for i = 1, #vertices, 2 do
-    local x, y = vertices[i], vertices[i + 1]
-    minX = math.min(minX, x)
-    maxX = math.max(maxX, x)
-    minY = math.min(minY, y)
-    maxY = math.max(maxY, y)
-  end
+    -- Encontrar los valores extremos
+    for i = 1, #vertices, 2 do
+        local x, y = vertices[i], vertices[i + 1]
+        minX = math.min(minX, x)
+        maxX = math.max(maxX, x)
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
 
-  -- Calcular dimensiones y origen
-  local width = maxX - minX
-  local height = maxY - minY
-  local originX = minX
-  local originY = minY
+    -- Calcular dimensiones y origen
+    local width = maxX - minX
+    local height = maxY - minY
+    local originX = minX
+    local originY = minY
 
-  return width, height, originX, originY
+    return width, height, originX, originY
 end
 
 -- Centra un objeto dentro de un contenedor, devolviendo los offsets en X e Y.
@@ -153,7 +225,7 @@ function Textocentrado(texto, x, y, fuente, id)
     
     -- Si estamos en el botón de entrada (ID 5), alinear a la izquierda con margen
     if id == 5 then
-        local offsetx = 15*ui_unit.x  -- margen fijo de 10 pixels
+        local offsetx = 6*ui_unit.x  -- margen fijo de 10 pixels
         local offsety = fuente:getHeight() / 2
         love.graphics.translate(math.floor(offsetx), math.floor(y - offsety))
     else
@@ -168,148 +240,136 @@ function Textocentrado(texto, x, y, fuente, id)
 end
 
 function DrawTri()
-  love.graphics.push()
+    love.graphics.push()
 
-  if debug then
-    love.graphics.setColor(1,1,1,0.25)
-    love.graphics.rectangle("fill", 25*ui_unit.x*0.5, ui_unit.y * 40, area.x, area.y)
-  end
-
-  -- Obtener las dimensiones y origen del triángulo
-  local triWidth, triHeight, originX, originY = GetTriangleDimensions(scaledVertices)
-  local offx, offy = Centrado(area.x, area.y, triWidth, triHeight)
-  
-  -- Ajustar la traslación considerando el origen del triángulo
-  love.graphics.translate(25 * ui_unit.x * 0.5 + offx - originX, ui_unit.y * 40 + offy - originY)
-  love.graphics.setColor(1, 1, 1, 1)
-  love.graphics.polygon("fill", scaledVertices)
-
-  -- Calcular puntos medios de los lados
-  local midpoints = {
-    -- Punto medio del lado a (entre v2 y v3)
-    {(scaledVertices[3] + scaledVertices[5])/2, (scaledVertices[4] + scaledVertices[6])/2},
-    -- Punto medio del lado b (entre v1 y v3)
-    {(scaledVertices[1] + scaledVertices[5])/2, (scaledVertices[2] + scaledVertices[6])/2},
-    -- Punto medio del lado c (entre v1 y v2)
-    {(scaledVertices[1] + scaledVertices[3])/2, (scaledVertices[2] + scaledVertices[4])/2}
-  }
-
-  -- Calcular las dimensiones de los círculos
-  local circleunit
-  if ui_unit.x > ui_unit.y then
-    circleunit = ui_unit.y
-  else
-    circleunit = ui_unit.x
-  end
-
-  -- Dibujar círculos en los vértices si estamos en modo debug
-  if debug then
-    love.graphics.setColor(1, 0, 0, 0.5)
-    for i = 1, 3 do
-      love.graphics.circle("fill", scaledVertices[i*2-1], scaledVertices[i*2], 7*circleunit)
-    end
-  elseif debug == false then
-    love.graphics.setColor(0.0, 0.11, 0.16, 1)
-    for i = 1, 3 do
-      love.graphics.circle("fill", scaledVertices[i*2-1], scaledVertices[i*2], 7*circleunit)
-    end
-  end
-
-  -- Mostrar valores de los ángulos en los vértices
-  love.graphics.setFont(font_scp_16)
-  for i = 1, 3 do
-    love.graphics.setColor(1, 1, 1, 1)
-    local value = "?"  -- Valor por defecto si no hay dato
-    if i == 1 then value = "A: " .. (trisolver.Triangle.angles.A or "?") .. "°"
-    elseif i == 2 then value = "B: " .. (trisolver.Triangle.angles.B or "?") .. "°"
-    elseif i == 3 then value = "C: " .. (trisolver.Triangle.angles.C or "?") .. "°"
-    end
-    
-    -- Mostrar texto cerca del vértice
-    Textocentrado(value, scaledVertices[i*2-1], scaledVertices[i*2])
-  end
-
-  -- Dibujar círculos en los puntos medios y mostrar valores
-  love.graphics.setFont(font_scp_16)
-  for i, midpoint in ipairs(midpoints) do
-    -- Dibujar círculo
     if debug then
-      love.graphics.setColor(0, 1, 0, 0.5)
-      love.graphics.circle("fill", midpoint[1], midpoint[2], 7*circleunit)
-    elseif debug == false then
-      love.graphics.setColor(0.0, 0.11, 0.16, 1)
-      love.graphics.circle("fill", midpoint[1], midpoint[2], 7*circleunit)
+        love.graphics.setColor(1,1,1,0.25)
+        love.graphics.rectangle("fill", 25*ui_unit.x*0.5, ui_unit.y * 40, area.x, area.y)
     end
-    
-    -- Mostrar valor del lado/ángulo
-    love.graphics.setColor(1, 1, 1, 1)
-    local value = "?"  -- Valor por defecto si no hay dato
-    if i == 1 then value = "a: " .. (trisolver.Triangle.sides.a or "?")
-    elseif i == 2 then value = "b: " .. (trisolver.Triangle.sides.b or "?")
-    elseif i == 3 then value = "c: " .. (trisolver.Triangle.sides.c or "?")
-    end
-    
-    -- Ajustar posición del texto para que esté fuera del triángulo
-    local offsetX = 10 * circleunit
-    local offsetY = 10 * circleunit
-    Textocentrado(value, midpoint[1], midpoint[2])
-  end
 
-  love.graphics.pop()
+    -- Obtener las dimensiones y origen del triángulo
+    local triWidth, triHeight, originX, originY = GetTriangleDimensions(scaledVertices)
+    local offx, offy = Centrado(area.x, area.y, triWidth, triHeight)
+    
+    -- Ajustar la traslación considerando el origen del triángulo
+    love.graphics.translate(25 * ui_unit.x * 0.5 + offx - originX, ui_unit.y * 40 + offy - originY)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.polygon("fill", scaledVertices)
+
+    -- Calcular puntos medios de los lados
+    local midpoints = {
+        -- Punto medio del lado a (entre v2 y v3)
+        {(scaledVertices[3] + scaledVertices[5])/2, (scaledVertices[4] + scaledVertices[6])/2},
+        -- Punto medio del lado b (entre v1 y v3)
+        {(scaledVertices[1] + scaledVertices[5])/2, (scaledVertices[2] + scaledVertices[6])/2},
+        -- Punto medio del lado c (entre v1 y v2)
+        {(scaledVertices[1] + scaledVertices[3])/2, (scaledVertices[2] + scaledVertices[4])/2}
+    }
+
+    -- Calcular las dimensiones de los círculos
+    local circleunit
+    if ui_unit.x > ui_unit.y then
+        circleunit = ui_unit.y
+    else
+        circleunit = ui_unit.x
+    end
+
+    -- Dibujar círculos en los vértices si estamos en modo debug
+    if debug then
+        love.graphics.setColor(1, 0, 0, 0.5)
+        for i = 1, 3 do
+        love.graphics.circle("fill", scaledVertices[i*2-1], scaledVertices[i*2], 7*circleunit)
+        end
+    elseif debug == false then
+        love.graphics.setColor(0.0, 0.11, 0.16, 1)
+        for i = 1, 3 do
+        love.graphics.circle("fill", scaledVertices[i*2-1], scaledVertices[i*2], 7*circleunit)
+        end
+    end
+
+    -- Mostrar valores de los ángulos en los vértices
+    love.graphics.setFont(font_scp_16)
+    for i = 1, 3 do
+        love.graphics.setColor(1, 1, 1, 1)
+        local value = "?"  -- Valor por defecto si no hay dato
+        if i == 1 then value = "A: " .. (trisolver.Triangle.angles.A or "?") .. "°"
+        elseif i == 2 then value = "B: " .. (trisolver.Triangle.angles.B or "?") .. "°"
+        elseif i == 3 then value = "C: " .. (trisolver.Triangle.angles.C or "?") .. "°"
+        end
+        
+        -- Mostrar texto cerca del vértice
+        Textocentrado(value, scaledVertices[i*2-1], scaledVertices[i*2])
+    end
+
+    -- Dibujar círculos en los puntos medios y mostrar valores
+    love.graphics.setFont(font_scp_16)
+    for i, midpoint in ipairs(midpoints) do
+        -- Dibujar círculo
+        if debug then
+        love.graphics.setColor(0, 1, 0, 0.5)
+        love.graphics.circle("fill", midpoint[1], midpoint[2], 7*circleunit)
+        elseif debug == false then
+        love.graphics.setColor(0.0, 0.11, 0.16, 1)
+        love.graphics.circle("fill", midpoint[1], midpoint[2], 7*circleunit)
+        end
+        
+        -- Mostrar valor del lado/ángulo
+        love.graphics.setColor(1, 1, 1, 1)
+        local value = "?"  -- Valor por defecto si no hay dato
+        if i == 1 then value = "a: " .. (trisolver.Triangle.sides.a or "?")
+        elseif i == 2 then value = "b: " .. (trisolver.Triangle.sides.b or "?")
+        elseif i == 3 then value = "c: " .. (trisolver.Triangle.sides.c or "?")
+        end
+        
+        -- Ajustar posición del texto para que esté fuera del triángulo
+        local offsetX = 10 * circleunit
+        local offsetY = 10 * circleunit
+        Textocentrado(value, midpoint[1], midpoint[2])
+    end
+
+    love.graphics.pop()
 end
 
 function love.load()
-  love.window.setDisplaySleepEnabled(true)
-  love.window.setFullscreen(fullscreen)
+    love.window.setDisplaySleepEnabled(true)
+    love.window.setFullscreen(fullscreen)
 
-  -- Obtener los argumentos de la línea de comandos
-  local arguments = love.arg.parseGameArguments(arg)
-  for i, v in ipairs(arguments) do
-    if v == "-d" then
-      debug = true
+    -- Obtener los argumentos de la línea de comandos
+    local arguments = love.arg.parseGameArguments(arg)
+    for i, v in ipairs(arguments) do
+        if v == "-d" then debug = true end
     end
-  end
 
-  vertices[1] = math.random(-100, 100)
-  vertices[2] = math.random(-100, 100)
-  vertices[3] = math.random(-100, 100)
-  vertices[4] = math.random(-100, 100)
-  vertices[5] = math.random(-100, 100)
-  vertices[6] = math.random(-100, 100)
+    vertices[1] = math.random(-100, 100)
+    vertices[2] = math.random(-100, 100)
+    vertices[3] = math.random(-100, 100)
+    vertices[4] = math.random(-100, 100)
+    vertices[5] = math.random(-100, 100)
+    vertices[6] = math.random(-100, 100)
 
 end
 
 function love.update(dt)
-  safe_x, safe_y, safe_w, safe_h = love.window.getSafeArea()
-  ui_unit.x = safe_w / 100
-  ui_unit.y = safe_h / 100
+    safe_x, safe_y, safe_w, safe_h = love.window.getSafeArea()
+    ui_unit.x = safe_w / 100
+    ui_unit.y = safe_h / 100
 
-  area = {x = 75*ui_unit.x, y = 40*ui_unit.y}
+    area = {x = 75*ui_unit.x, y = 40*ui_unit.y}
 
-  -- Obtener las dimensiones del triángulo
-  local triWidth, triHeight = GetTriangleDimensions(vertices)
+    -- Obtener las dimensiones del triángulo
+    local triWidth, triHeight = GetTriangleDimensions(vertices)
 
-  -- Calcular factores de escala para ancho y alto
-  local scaleX = area.x / triWidth
-  local scaleY = area.y / triHeight
-  
-  -- Usar el factor más pequeño para mantener proporciones
-  local scaleFactor = math.min(scaleX, scaleY)
+    -- Calcular factores de escala para ancho y alto
+    local scaleX = area.x / triWidth
+    local scaleY = area.y / triHeight
+    
+    -- Usar el factor más pequeño para mantener proporciones
+    local scaleFactor = math.min(scaleX, scaleY)
 
-  -- Aplicar el factor de escala a los vértices del triángulo
-  for i = 1, #vertices do
-    scaledVertices[i] = vertices[i] * scaleFactor
-  end
-
-  --[[
-  -- crazy mode
-  vertices[1] = math.random(-100, 100)
-  vertices[2] = math.random(-100, 100)
-  vertices[3] = math.random(-100, 100)
-  vertices[4] = math.random(-100, 100)
-  vertices[5] = math.random(-100, 100)
-  vertices[6] = math.random(-100, 100)
-  ]]
+    -- Aplicar el factor de escala a los vértices del triángulo
+    for i = 1, #vertices do
+        scaledVertices[i] = vertices[i] * scaleFactor
+    end
 end
 
 -- Modificar la función love.draw
@@ -422,20 +482,13 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
     local touchY = y - safe_y + keyboardOffset  -- Añadir el offset del teclado
     
     -- Verificar toques en los botones de tipo de triángulo
-    local buttonsizeW = safe_w / 3
-    local buttonsizeH = buttonsizeW * 0.7
-    if buttonsizeH > safe_h * 0.18 then
-        buttonsizeH = safe_h * 0.18
-    end
-    local buttonposY = safe_h * 0.15
-
-    -- Comprobar si el toque está en alguno de los botones
-    for i = 0, 2 do
-        local buttonX = buttonsizeW * i
-        local buttonY = buttonposY
-        if touchX >= buttonX and touchX <= buttonX + buttonsizeW and
-           touchY >= buttonY and touchY <= buttonY + buttonsizeH then
-            TriState = i+1
+    local buttons = {ui_button_1, ui_button_2, ui_button_3}
+    for i, button in ipairs(buttons) do
+        if touchX >= button.min_x*ui_unit.x and 
+           touchX <= button.max_x*ui_unit.x and
+           touchY >= button.min_y*ui_unit.y and 
+           touchY <= button.max_y*ui_unit.y then
+            TriState = i
             return
         end
     end
@@ -485,22 +538,46 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
     end
 
     -- Verificar si se tocó el botón de ocultar teclado (id == 4)
-    if touchX >= 1*ui_unit.x and touchX <= 11*ui_unit.x and
-       touchY >= 89*ui_unit.y and touchY <= 99*ui_unit.y then
+    if (touchX >= ui_button_4.min_x*ui_unit.x and 
+       touchX <= ui_button_4.max_x*ui_unit.x and
+       touchY >= ui_button_4.min_y*ui_unit.y and 
+       touchY <= ui_button_4.max_y*ui_unit.y) or
+       (touchX >= ui_button_7.min_x*ui_unit.x and 
+       touchX <= ui_button_7.max_x*ui_unit.x and
+       touchY >= ui_button_7.min_y*ui_unit.y and 
+       touchY <= ui_button_7.max_y*ui_unit.y) then
         if keyboardOpen then
-            -- Ocultar teclado
+            -- Ocultar teclado y resetear estado de input
             love.keyboard.setTextInput(false)
-            love.keyboard.hide()  -- Añadir esta línea
+            love.keyboard.hide()
+            selectedInput = nil  -- Resetear la selección
+            inputText = ""      -- Limpiar el texto de entrada
         end
         return
     end
 
     -- Verificar si se tocó el botón de mostrar teclado (id == 5)
-    if touchX >= 12*ui_unit.x and touchX <= 92*ui_unit.x and
-       touchY >= 89*ui_unit.y and touchY <= 99*ui_unit.y then
+    local button6_height = (ui_button_6.max_y - ui_button_6.min_y) * ui_unit.y
+    local button6_width = button6_height  -- El ancho será igual al alto
+    local button6_x = 99 * ui_unit.x - button6_width
+    
+    -- Verificar si se tocó el botón de enviar (id == 6)
+    if touchX >= button6_x and 
+       touchX <= button6_x + button6_width and
+       touchY >= ui_button_6.min_y*ui_unit.y and 
+       touchY <= ui_button_6.max_y*ui_unit.y then
+        -- Aquí iría la lógica del botón enviar
+        return
+    end
+
+    -- Verificar si se tocó el botón de mostrar teclado (id == 5)
+    if touchX >= ui_button_5.min_x*ui_unit.x and 
+       touchX <= button6_x and  -- El límite derecho es donde empieza el botón 6
+       touchY >= ui_button_5.min_y*ui_unit.y and 
+       touchY <= ui_button_5.max_y*ui_unit.y then
         if not keyboardOpen then
             love.keyboard.setTextInput(true)
-            love.keyboard.show()  -- Añadir esta línea
+            love.keyboard.show()
         end
         return
     end

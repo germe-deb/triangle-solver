@@ -1,8 +1,25 @@
 -- Estructura para almacenar los datos del triángulo
 local Triangle = {
-    sides = {a = nil, b = nil, c = nil},
-    angles = {A = nil, B = nil, C = nil},
-    vertices = {x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0}
+    -- Ángulos (en grados)
+    angles = {
+        A = nil,  -- Ángulo A (vértice 1)
+        B = nil,  -- Ángulo B (vértice 2)
+        C = nil   -- Ángulo C (vértice 3)
+    },
+    
+    -- Lados (en unidades arbitrarias)
+    sides = {
+        a = nil,  -- Lado a (opuesto al vértice A)
+        b = nil,  -- Lado b (opuesto al vértice B)
+        c = nil   -- Lado c (opuesto al vértice C)
+    },
+    
+    -- Coordenadas de los vértices
+    vertices = {
+        x1 = 0, y1 = 0,  -- Vértice 1 (ángulo A)
+        x2 = 0, y2 = 0,  -- Vértice 2 (ángulo B)
+        x3 = 0, y3 = 0   -- Vértice 3 (ángulo C)
+    }
 }
 
 -- Teorema del seno
