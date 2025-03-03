@@ -16,9 +16,9 @@ local Triangle = {
     
     -- Coordenadas de los vértices
     vertices = {
-        x1 = 0, y1 = 0,      -- Vértice A
-        x2 = 100, y2 = 0,    -- Vértice B
-        x3 = 50, y3 = 100    -- Vértice C
+        x1 = 0, y1 = 100,      -- Vértice A
+        x2 = 100, y2 = 100,    -- Vértice B
+        x3 = 50, y3 = 0   -- Vértice C
     }
 }
 

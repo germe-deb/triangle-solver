@@ -1,4 +1,4 @@
--- SPDX-FileCopyrightText: 2024 dpkgluci
+-- SPDX-FileCopyrightText: 2025 dpkgluci
 --
 -- SPDX-License-Identifier: MIT
 
@@ -7,9 +7,10 @@
 
 math.randomseed(os.time())
 
-trisolver = require("assets/scripts/tri-solver")
+local solver = require("assets/scripts/solver")
+local ui = require("assets/scripts/ui")
 -- juego
-TriState = 1
+TriState = 3
 local debug = false
 local fullscreen = false
 local safe_x, safe_y, safe_w, safe_h = 0, 0, 0, 0
@@ -29,21 +30,21 @@ local keyboardOpen = false
 local keyboardOffset = 0
 local keyboardHeight = 0
 
-local ui_button_1 = {
+local ui_button_1 = { -- botón para establecer el triángulo en Rectángulo
     min_x = 0,
     max_x = 33.33,  -- safe_w/3
     min_y = 15,     -- safe_h * 0.15
     max_y = 30      -- min_y + buttonsizeH
 }
 
-local ui_button_2 = {
+local ui_button_2 = { -- botón para establecer el triángulo en Equilátero
     min_x = 33.33,
     max_x = 66.66,
     min_y = 15,
     max_y = 30
 }
 
-local ui_button_3 = {
+local ui_button_3 = { -- botón para establecer el triángulo en Escaleno
     min_x = 66.66,
     max_x = 100,
     min_y = 15,
@@ -89,7 +90,7 @@ local maxInputLength = 10 -- Limitar longitud del texto
 
 -- Modificar la función DrawTriTypeSelect para usar estas variables
 function DrawTriTypeSelect()
-    local buttonLabels = {"Rect.", "Equil.", "Escal."}
+    local buttonLabels = {"Rectángulo", "Equilátero", "Escaleno"}
     local buttons = {ui_button_1, ui_button_2, ui_button_3}
     
     for i, button in ipairs(buttons) do
@@ -300,11 +301,11 @@ function DrawTri()
         love.graphics.setColor(1, 1, 1, 1)
         local value = "?"  -- Valor por defecto si no hay dato
         if i == 1 then 
-            value = "A: " .. (trisolver.Triangle.angles.A and string.format("%.2f", trisolver.Triangle.angles.A) or "?") .. "°"
+            value = "A: " .. (solver.Triangle.angles.A and string.format("%.2f", solver.Triangle.angles.A) or "?") .. "°"
         elseif i == 2 then 
-            value = "B: " .. (trisolver.Triangle.angles.B and string.format("%.2f", trisolver.Triangle.angles.B) or "?") .. "°"
+            value = "B: " .. (solver.Triangle.angles.B and string.format("%.2f", solver.Triangle.angles.B) or "?") .. "°"
         elseif i == 3 then 
-            value = "C: " .. (trisolver.Triangle.angles.C and string.format("%.2f", trisolver.Triangle.angles.C) or "?") .. "°"
+            value = "C: " .. (solver.Triangle.angles.C and string.format("%.2f", solver.Triangle.angles.C) or "?") .. "°"
         end
         
         -- Mostrar texto cerca del vértice
@@ -327,11 +328,11 @@ function DrawTri()
         love.graphics.setColor(1, 1, 1, 1)
         local value = "?"  -- Valor por defecto si no hay dato
         if i == 1 then 
-            value = "a: " .. (trisolver.Triangle.sides.a and string.format("%.2f", trisolver.Triangle.sides.a) or "?")
+            value = "a: " .. (solver.Triangle.sides.a and string.format("%.2f", solver.Triangle.sides.a) or "?")
         elseif i == 2 then 
-            value = "b: " .. (trisolver.Triangle.sides.b and string.format("%.2f", trisolver.Triangle.sides.b) or "?")
+            value = "b: " .. (solver.Triangle.sides.b and string.format("%.2f", solver.Triangle.sides.b) or "?")
         elseif i == 3 then 
-            value = "c: " .. (trisolver.Triangle.sides.c and string.format("%.2f", trisolver.Triangle.sides.c) or "?")
+            value = "c: " .. (solver.Triangle.sides.c and string.format("%.2f", solver.Triangle.sides.c) or "?")
         end
         
         Textocentrado(value, midpoint[1], midpoint[2])
@@ -352,9 +353,9 @@ function love.load()
 
     -- Inicializar vértices con los valores por defecto del triángulo
     vertices = {
-        trisolver.Triangle.vertices.x1, trisolver.Triangle.vertices.y1,
-        trisolver.Triangle.vertices.x2, trisolver.Triangle.vertices.y2,
-        trisolver.Triangle.vertices.x3, trisolver.Triangle.vertices.y3
+        solver.Triangle.vertices.x1, solver.Triangle.vertices.y1,
+        solver.Triangle.vertices.x2, solver.Triangle.vertices.y2,
+        solver.Triangle.vertices.x3, solver.Triangle.vertices.y3
     }
 end
 
@@ -386,7 +387,7 @@ function love.update(dt)
     local missing = nil
     
     -- Contar ángulos conocidos y calcular suma
-    for angle, value in pairs(trisolver.Triangle.angles) do
+    for angle, value in pairs(solver.Triangle.angles) do
         if value then
             count = count + 1
             sum = sum + value
@@ -397,9 +398,9 @@ function love.update(dt)
     
     -- Si tenemos exactamente 2 ángulos, calcular el tercero
     if count == 2 and missing and sum < 180 then
-        trisolver.Triangle.angles[missing] = 180 - sum
+        solver.Triangle.angles[missing] = 180 - sum
         -- Actualizar vértices después de resolver el nuevo ángulo
-        vertices = trisolver.triangleToVertices(trisolver.Triangle)
+        vertices = solver.triangleToVertices(solver.Triangle)
     end
 end
 
@@ -551,7 +552,7 @@ function handleInteraction(x, y)
             local angleLabels = {"A", "B", "C"}
             selectedInput = angleLabels[i]
             -- Convertir el valor existente a string si existe
-            inputText = trisolver.Triangle.angles[selectedInput] and tostring(trisolver.Triangle.angles[selectedInput]) or ""
+            inputText = solver.Triangle.angles[selectedInput] and tostring(solver.Triangle.angles[selectedInput]) or ""
             return
         end
     end
@@ -566,7 +567,7 @@ function handleInteraction(x, y)
             local sideLabels = {"a", "b", "c"}
             selectedInput = sideLabels[i]
             -- Convertir el valor existente a string si existe
-            inputText = trisolver.Triangle.sides[selectedInput] and tostring(trisolver.Triangle.sides[selectedInput]) or ""
+            inputText = solver.Triangle.sides[selectedInput] and tostring(solver.Triangle.sides[selectedInput]) or ""
             return
         end
     end
@@ -645,10 +646,10 @@ function saveCurrentValue()
         if value then
             if selectedInput:match("[ABC]") then
                 if value > 0 and value < 180 then
-                    trisolver.Triangle.angles[selectedInput] = value
+                    solver.Triangle.angles[selectedInput] = value
                 end
             else
-                trisolver.Triangle.sides[selectedInput] = value
+                solver.Triangle.sides[selectedInput] = value
             end
             
             inputText = ""
