@@ -10,7 +10,7 @@ math.randomseed(os.time())
 trisolver = require("assets/scripts/tri-solver")
 -- juego
 TriState = 1
-local debug = true
+local debug = false
 local fullscreen = false
 local safe_x, safe_y, safe_w, safe_h = 0, 0, 0, 0
 
@@ -106,7 +106,7 @@ function DrawNavUi()
     DrawButton(ui_button_4.min_x*ui_unit.x, ui_button_4.min_y*ui_unit.y, 
                (ui_button_4.max_x-ui_button_4.min_x)*ui_unit.x, 
                (ui_button_4.max_y-ui_button_4.min_y)*ui_unit.y, 
-               1, 1, 1, 4, "Hide")
+               0, 0.19, 0.26, 4, "Toca para volver")
 
     -- Calcular el ancho del botón 6 (igual a su alto)
     local button6_height = (ui_button_6.max_y - ui_button_6.min_y) * ui_unit.y
@@ -124,11 +124,11 @@ function DrawNavUi()
                (ui_button_5.max_y-ui_button_5.min_y)*ui_unit.y,
                1, 1, 1, 5, "Show Keyboard")
     
-    -- Dibujar botón 6 (Send)
+    -- Dibujar botón 6 (Set)
     DrawButton(button6_x, ui_button_6.min_y*ui_unit.y,
                button6_width,
                (ui_button_6.max_y-ui_button_6.min_y)*ui_unit.y,
-               1, 1, 1, 6, "Send")
+               1, 1, 1, 6, "Set")
 end
 
 -- pos x, pos y, ancho, alto, r, g, b, id, texto
@@ -145,6 +145,10 @@ function DrawButton(x, y, w, h, r, g, b, id, text)
         love.graphics.setColor(r,g,b, 1)
         love.graphics.rectangle("fill", x + offsetx, y + offsety, w*0.95, h*0.95)
         love.graphics.setColor(0, 0.19, 0.26, 1)
+    end
+
+    if id == 4 then
+        love.graphics.setColor(1,1,1,1)
     end
     
     -- setear la fuente grande
@@ -218,13 +222,13 @@ function Centrado(contW, contH, objW, objH, aliX, aliY)
   return offX, offY
 end
 
-function Textocentrado(texto, x, y, fuente, id)
+function Textocentrado(texto, x, y, fuente, id, bold)
     love.graphics.push()
     fuente = fuente or font_scp_16
     love.graphics.setFont(fuente)
     
     -- Si estamos en el botón de entrada (ID 5), alinear a la izquierda con margen
-    if id == 5 then
+    if (id == 5) then
         local offsetx = 6*ui_unit.x  -- margen fijo de 10 pixels
         local offsety = fuente:getHeight() / 2
         love.graphics.translate(math.floor(offsetx), math.floor(y - offsety))
@@ -235,6 +239,9 @@ function Textocentrado(texto, x, y, fuente, id)
         love.graphics.translate(math.floor(x - offsetx), math.floor(y - offsety))
     end
     
+    if bold then
+
+    end
     love.graphics.print(texto)
     love.graphics.pop()
 end
@@ -292,9 +299,12 @@ function DrawTri()
     for i = 1, 3 do
         love.graphics.setColor(1, 1, 1, 1)
         local value = "?"  -- Valor por defecto si no hay dato
-        if i == 1 then value = "A: " .. (trisolver.Triangle.angles.A or "?") .. "°"
-        elseif i == 2 then value = "B: " .. (trisolver.Triangle.angles.B or "?") .. "°"
-        elseif i == 3 then value = "C: " .. (trisolver.Triangle.angles.C or "?") .. "°"
+        if i == 1 then 
+            value = "A: " .. (trisolver.Triangle.angles.A and string.format("%.2f", trisolver.Triangle.angles.A) or "?") .. "°"
+        elseif i == 2 then 
+            value = "B: " .. (trisolver.Triangle.angles.B and string.format("%.2f", trisolver.Triangle.angles.B) or "?") .. "°"
+        elseif i == 3 then 
+            value = "C: " .. (trisolver.Triangle.angles.C and string.format("%.2f", trisolver.Triangle.angles.C) or "?") .. "°"
         end
         
         -- Mostrar texto cerca del vértice
@@ -316,14 +326,14 @@ function DrawTri()
         -- Mostrar valor del lado/ángulo
         love.graphics.setColor(1, 1, 1, 1)
         local value = "?"  -- Valor por defecto si no hay dato
-        if i == 1 then value = "a: " .. (trisolver.Triangle.sides.a or "?")
-        elseif i == 2 then value = "b: " .. (trisolver.Triangle.sides.b or "?")
-        elseif i == 3 then value = "c: " .. (trisolver.Triangle.sides.c or "?")
+        if i == 1 then 
+            value = "a: " .. (trisolver.Triangle.sides.a and string.format("%.2f", trisolver.Triangle.sides.a) or "?")
+        elseif i == 2 then 
+            value = "b: " .. (trisolver.Triangle.sides.b and string.format("%.2f", trisolver.Triangle.sides.b) or "?")
+        elseif i == 3 then 
+            value = "c: " .. (trisolver.Triangle.sides.c and string.format("%.2f", trisolver.Triangle.sides.c) or "?")
         end
         
-        -- Ajustar posición del texto para que esté fuera del triángulo
-        local offsetX = 10 * circleunit
-        local offsetY = 10 * circleunit
         Textocentrado(value, midpoint[1], midpoint[2])
     end
 
@@ -340,13 +350,12 @@ function love.load()
         if v == "-d" then debug = true end
     end
 
-    vertices[1] = math.random(-100, 100)
-    vertices[2] = math.random(-100, 100)
-    vertices[3] = math.random(-100, 100)
-    vertices[4] = math.random(-100, 100)
-    vertices[5] = math.random(-100, 100)
-    vertices[6] = math.random(-100, 100)
-
+    -- Inicializar vértices con los valores por defecto del triángulo
+    vertices = {
+        trisolver.Triangle.vertices.x1, trisolver.Triangle.vertices.y1,
+        trisolver.Triangle.vertices.x2, trisolver.Triangle.vertices.y2,
+        trisolver.Triangle.vertices.x3, trisolver.Triangle.vertices.y3
+    }
 end
 
 function love.update(dt)
@@ -440,8 +449,8 @@ function love.keypressed(key, scancode, isrepeat)
     elseif key == "f11" then
         fullscreen = not fullscreen
         love.window.setFullscreen(fullscreen)
-    elseif key == "o" then
-        debug = not debug
+    -- elseif key == "o" then
+        -- debug = not debug
     elseif key == "backspace" then
         -- Borrar el último carácter si hay texto y el teclado está abierto
         if keyboardOpen and #inputText > 0 then
@@ -470,16 +479,17 @@ function love.textinput(text)
         end
         
         -- Solo permitir números y símbolos matemáticos
-        if text:match("[0-9%-%+%.,×÷=%%√πθ°e%(%)]") then
+        if text:match("[0-9%-%+%.,×÷=%%πθe%(%)]") then
             inputText = inputText .. text
         end
     end
 end
 
-function love.touchpressed(id, x, y, dx, dy, pressure)
+-- Añadir esta nueva función
+function handleInteraction(x, y)
     -- Ajustar coordenadas relativas al área segura y al offset del teclado
     local touchX = x - safe_x
-    local touchY = y - safe_y + keyboardOffset  -- Añadir el offset del teclado
+    local touchY = y - safe_y + keyboardOffset
     
     -- Verificar toques en los botones de tipo de triángulo
     local buttons = {ui_button_1, ui_button_2, ui_button_3}
@@ -518,7 +528,8 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
         if distance <= hitRadius then
             local angleLabels = {"A", "B", "C"}
             selectedInput = angleLabels[i]
-            inputText = trisolver.Triangle.angles[selectedInput] or ""
+            -- Convertir el valor existente a string si existe
+            inputText = trisolver.Triangle.angles[selectedInput] and tostring(trisolver.Triangle.angles[selectedInput]) or ""
             return
         end
     end
@@ -532,7 +543,8 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
         if distance <= hitRadius then
             local sideLabels = {"a", "b", "c"}
             selectedInput = sideLabels[i]
-            inputText = trisolver.Triangle.sides[selectedInput] or ""
+            -- Convertir el valor existente a string si existe
+            inputText = trisolver.Triangle.sides[selectedInput] and tostring(trisolver.Triangle.sides[selectedInput]) or ""
             return
         end
     end
@@ -567,6 +579,7 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
        touchY >= ui_button_6.min_y*ui_unit.y and 
        touchY <= ui_button_6.max_y*ui_unit.y then
         -- Aquí iría la lógica del botón enviar
+        saveCurrentValue()
         return
     end
 
@@ -584,10 +597,88 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
 
 end
 
+-- Modificar love.touchpressed para usar la nueva función
+function love.touchpressed(id, x, y, dx, dy, pressure)
+    handleInteraction(x, y)
+end
+
+-- Añadir soporte para ratón
+function love.mousepressed(x, y, button, istouch)
+    if button == 1 and not istouch then  -- Solo click izquierdo y no es un toque
+        handleInteraction(x, y)
+    end
+end
+
 function love.touchmoved(id, x, y, dx, dy, pressure)
   -- Implementar arrastre si lo necesitas
 end
 
 function love.touchreleased(id, x, y, dx, dy, pressure)
   -- Implementar acciones al soltar si las necesitas
+end
+
+function saveCurrentValue()
+    if selectedInput and inputText ~= "" then
+        local value = tonumber(inputText)
+        if value then
+            -- Guardar los vértices actuales antes de cualquier cambio
+            local currentVertices = {
+                vertices[1], vertices[2],
+                vertices[3], vertices[4],
+                vertices[5], vertices[6]
+            }
+            
+            if selectedInput:match("[ABC]") then
+                -- Verificar que el ángulo sea positivo y menor que 180
+                if value <= 0 or value >= 180 then
+                    inputText = ""
+                    return
+                end
+                
+                -- Calcular la suma de los ángulos existentes (excluyendo el actual)
+                local sumExisting = 0
+                local angleCount = 0
+                for angle, val in pairs(trisolver.Triangle.angles) do
+                    if angle ~= selectedInput and val then
+                        sumExisting = sumExisting + val
+                        angleCount = angleCount + 1
+                    end
+                end
+                
+                -- Solo validar si tenemos dos ángulos y su suma es 180
+                if angleCount == 1 and (sumExisting + value) == 180 then
+                    inputText = ""
+                    return
+                end
+                
+                trisolver.Triangle.angles[selectedInput] = value
+            else
+                trisolver.Triangle.sides[selectedInput] = value
+            end
+            
+            -- Intentar resolver el triángulo
+            if trisolver.solveTriangle(trisolver.Triangle) then
+                -- Actualizar los vértices si se resolvió el triángulo
+                vertices = trisolver.triangleToVertices(trisolver.Triangle)
+            else
+                -- Si no se pudo resolver, mantener los vértices actuales
+                vertices = currentVertices
+            end
+            
+            -- Actualizar los vértices escalados
+            local triWidth, triHeight = GetTriangleDimensions(vertices)
+            local scaleX = area.x / triWidth
+            local scaleY = area.y / triHeight
+            local scaleFactor = math.min(scaleX, scaleY)
+            
+            for i = 1, #vertices do
+                scaledVertices[i] = vertices[i] * scaleFactor
+            end
+            
+            inputText = ""
+            selectedInput = nil
+            love.keyboard.setTextInput(false)
+            love.keyboard.hide()
+        end
+    end
 end
