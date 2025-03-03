@@ -121,9 +121,9 @@ local baseY = 0  -- Se actualizará en love.update
 
 -- Modificar las variables iniciales
 local TRIANGLE_AREA = {
-    x_percent = 90,  -- 75% del ancho de la pantalla
+    x_percent = 85,  -- 75% del ancho de la pantalla
     y_percent = 55,  -- 40% del alto de la pantalla
-    start_x = (100 - 90) /2,  -- Comienza en 12.5% del ancho
+    start_x = (100 - 85) /2,  -- Comienza en 12.5% del ancho
     start_y = 20     -- Comienza en 30% del alto
 }
 
