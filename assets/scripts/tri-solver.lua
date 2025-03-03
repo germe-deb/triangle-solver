@@ -50,6 +50,18 @@ local function lawOfSines(triangle)
         changed = true
     end
     
+    -- Nuevo Caso 5: lado a, ángulos A y C -> lado c
+    if triangle.sides.a and triangle.angles.A and triangle.angles.C and not triangle.sides.c then
+        triangle.sides.c = triangle.sides.a * math.sin(math.rad(triangle.angles.C)) / math.sin(math.rad(triangle.angles.A))
+        changed = true
+    end
+    
+    -- Nuevo Caso 6: lado b, ángulos B y C -> lado c
+    if triangle.sides.b and triangle.angles.B and triangle.angles.C and not triangle.sides.c then
+        triangle.sides.c = triangle.sides.b * math.sin(math.rad(triangle.angles.C)) / math.sin(math.rad(triangle.angles.B))
+        changed = true
+    end
+    
     return changed
 end
 
@@ -137,57 +149,42 @@ local function angleSolver(triangle)
     local changed = false
     local angles = triangle.angles
     
-    -- Contar ángulos conocidos y sumar sus valores
-    local count = 0
-    local sum = 0
-    local missing = nil
-    
-    -- Primero encontrar cuántos ángulos tenemos y cuál falta
-    for angle, value in pairs(angles) do
-        if value then
-            count = count + 1
-            sum = sum + value
-        else
-            missing = angle
-        end
+    -- Caso 1: tenemos A y B, calcular C
+    if angles.A and angles.B and not angles.C then
+        angles.C = 180 - angles.A - angles.B
+        changed = true
     end
     
-    -- Si tenemos exactamente dos ángulos, calcular el tercero inmediatamente
-    if count == 2 and missing and sum < 180 then
-        angles[missing] = 180 - sum
+    -- Caso 2: tenemos A y C, calcular B
+    if angles.A and angles.C and not angles.B then
+        angles.B = 180 - angles.A - angles.C
+        changed = true
+    end
+    
+    -- Caso 3: tenemos B y C, calcular A
+    if angles.B and angles.C and not angles.A then
+        angles.A = 180 - angles.B - angles.C
         changed = true
     end
     
     return changed
 end
 
--- Intentar resolver el triángulo con los datos disponibles
 local function solveTriangle(triangle)
-    local solved = false
-    local iterations = 0
-    local max_iterations = 3
-    
-    -- Resolver ángulos primero, independientemente de los lados
+    -- Resolver ángulos primero, siempre
     angleSolver(triangle)
     
-    while not solved and iterations < max_iterations do
-        local changed = false
-        
-        -- Aplicar teoremas para resolver lados
-        changed = lawOfSines(triangle) or changed
-        changed = lawOfCosines(triangle) or changed
-        
-        -- Verificar si hemos resuelto todo
-        solved = true
-        for _,v in pairs(triangle.sides) do
-            if not v then solved = false break end
-        end
-        for _,v in pairs(triangle.angles) do
-            if not v then solved = false break end
-        end
-        
-        iterations = iterations + 1
-        if not changed then break end
+    -- Luego intentar resolver los lados
+    local changed = lawOfSines(triangle)
+    changed = lawOfCosines(triangle) or changed
+    
+    -- Verificar si está todo resuelto
+    local solved = true
+    for _, v in pairs(triangle.angles) do
+        if not v then solved = false break end
+    end
+    for _, v in pairs(triangle.sides) do
+        if not v then solved = false break end
     end
     
     return solved
@@ -196,5 +193,6 @@ end
 return {
     Triangle = Triangle,
     solveTriangle = solveTriangle,
-    triangleToVertices = triangleToVertices
+    triangleToVertices = triangleToVertices,
+    angleSolver = angleSolver  -- Exportar angleSolver
 }

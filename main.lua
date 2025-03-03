@@ -379,6 +379,28 @@ function love.update(dt)
     for i = 1, #vertices do
         scaledVertices[i] = vertices[i] * scaleFactor
     end
+
+    -- Verificar y resolver ángulos automáticamente
+    local count = 0
+    local sum = 0
+    local missing = nil
+    
+    -- Contar ángulos conocidos y calcular suma
+    for angle, value in pairs(trisolver.Triangle.angles) do
+        if value then
+            count = count + 1
+            sum = sum + value
+        else
+            missing = angle
+        end
+    end
+    
+    -- Si tenemos exactamente 2 ángulos, calcular el tercero
+    if count == 2 and missing and sum < 180 then
+        trisolver.Triangle.angles[missing] = 180 - sum
+        -- Actualizar vértices después de resolver el nuevo ángulo
+        vertices = trisolver.triangleToVertices(trisolver.Triangle)
+    end
 end
 
 -- Modificar la función love.draw
@@ -621,58 +643,12 @@ function saveCurrentValue()
     if selectedInput and inputText ~= "" then
         local value = tonumber(inputText)
         if value then
-            -- Guardar los vértices actuales antes de cualquier cambio
-            local currentVertices = {
-                vertices[1], vertices[2],
-                vertices[3], vertices[4],
-                vertices[5], vertices[6]
-            }
-            
             if selectedInput:match("[ABC]") then
-                -- Verificar que el ángulo sea positivo y menor que 180
-                if value <= 0 or value >= 180 then
-                    inputText = ""
-                    return
+                if value > 0 and value < 180 then
+                    trisolver.Triangle.angles[selectedInput] = value
                 end
-                
-                -- Calcular la suma de los ángulos existentes (excluyendo el actual)
-                local sumExisting = 0
-                local angleCount = 0
-                for angle, val in pairs(trisolver.Triangle.angles) do
-                    if angle ~= selectedInput and val then
-                        sumExisting = sumExisting + val
-                        angleCount = angleCount + 1
-                    end
-                end
-                
-                -- Solo validar si tenemos dos ángulos y su suma es 180
-                if angleCount == 1 and (sumExisting + value) == 180 then
-                    inputText = ""
-                    return
-                end
-                
-                trisolver.Triangle.angles[selectedInput] = value
             else
                 trisolver.Triangle.sides[selectedInput] = value
-            end
-            
-            -- Intentar resolver el triángulo
-            if trisolver.solveTriangle(trisolver.Triangle) then
-                -- Actualizar los vértices si se resolvió el triángulo
-                vertices = trisolver.triangleToVertices(trisolver.Triangle)
-            else
-                -- Si no se pudo resolver, mantener los vértices actuales
-                vertices = currentVertices
-            end
-            
-            -- Actualizar los vértices escalados
-            local triWidth, triHeight = GetTriangleDimensions(vertices)
-            local scaleX = area.x / triWidth
-            local scaleY = area.y / triHeight
-            local scaleFactor = math.min(scaleX, scaleY)
-            
-            for i = 1, #vertices do
-                scaledVertices[i] = vertices[i] * scaleFactor
             end
             
             inputText = ""
