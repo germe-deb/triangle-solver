@@ -7,11 +7,21 @@
 
 math.randomseed(os.time())
 
+-- lick
+local lick = require "lib/lick/lick"
+lick.updateAllFiles = true
+lick.clearPackages = true
+
+lick.reset = true
+lick.debug = true
+
+-- otros archivos
 local solver = require("assets/scripts/solver")
 local ui = require("assets/scripts/ui")
+
 -- juego
 TriState = 3
-local debug = false
+local debug = true
 local fullscreen = false
 local safe_x, safe_y, safe_w, safe_h = 0, 0, 0, 0
 
@@ -301,11 +311,14 @@ function DrawTri()
         love.graphics.setColor(1, 1, 1, 1)
         local value = "?"  -- Valor por defecto si no hay dato
         if i == 1 then 
-            value = "A: " .. (solver.Triangle.angles.A and string.format("%.2f", solver.Triangle.angles.A) or "?") .. "°"
-        elseif i == 2 then 
-            value = "B: " .. (solver.Triangle.angles.B and string.format("%.2f", solver.Triangle.angles.B) or "?") .. "°"
-        elseif i == 3 then 
-            value = "C: " .. (solver.Triangle.angles.C and string.format("%.2f", solver.Triangle.angles.C) or "?") .. "°"
+            -- value = "A: " .. (solver.Triangle.angles.A and string.format("%.2f", solver.Triangle.angles.A) or "?") .. "°"
+            value = "A: " .. (solver.Triangle.angles.A and string.format("%.1f", solver.Triangle.angles.A) or "?") .. "°"
+        elseif i == 2 then
+            -- value = "B: " .. (solver.Triangle.angles.B and string.format("%.2f", solver.Triangle.angles.B) or "?") .. "°"
+            value = "B: " .. (solver.Triangle.angles.B and string.format("%.1f", solver.Triangle.angles.B) or "?") .. "°"
+        elseif i == 3 then
+            -- value = "C: " .. (solver.Triangle.angles.C and string.format("%.2f", solver.Triangle.angles.C) or "?") .. "°"
+            value = "C: " .. (solver.Triangle.angles.C and string.format("%.1f", solver.Triangle.angles.C) or "?") .. "°"
         end
         
         -- Mostrar texto cerca del vértice
