@@ -2,6 +2,21 @@
 
 local ui = {}
 
+-- Agregar una referencia al TRIANGLE_AREA de main
+local TRIANGLE_AREA
+local trianglesolved
+
+-- Agregar función para establecer TRIANGLE_AREA
+function ui.setTriangleArea(triangleArea)
+    TRIANGLE_AREA = triangleArea
+end
+
+-- Agregar función para establecer trianglesolved
+function ui.setTriangleSolved(solved)
+    trianglesolved = solved
+end
+
+
 -- variables
 
 local solver = require "assets/scripts/solver"
@@ -15,6 +30,12 @@ local area = {x = 0, y = 0}
 -- Add these tables to store vertices
 ui.vertices = {0, 0, 0, 0, 0, 0}
 ui.scaledVertices = {0, 0, 0, 0, 0, 0}
+
+-- Add these at the top with other module variables
+ui.targetVertices = {0, 0, 0, 0, 0, 0}  -- Vértices objetivo
+ui.lerpFactor = 1  -- Iniciar en 1 para evitar la interpolación al inicio
+ui.lerpSpeed = 2   -- Velocidad de interpolación
+ui.isAnimating = false  -- Nueva variable para controlar cuándo animar
 
 -- Add these as module variables
 ui.inputText = ""
@@ -80,6 +101,15 @@ local ui_button_7 = { -- ocultar teclado 2
     max_y = 88
 }
 
+-- botón de reset
+local ui_button_8 = {
+    min_x = 25,
+    max_x = 75,     -- Esta será ajustada dinámicamente en DrawNavUi
+    min_y = 80,
+    max_y = 88
+}
+
+
 -- funciones auxiliares:
 
 function DrawTriTypeSelect()
@@ -123,6 +153,16 @@ function DrawNavUi()
                button6_width,
                (ui_button_6.max_y-ui_button_6.min_y)*ui_unit.y,
                1, 1, 1, 6, "Set")
+
+    -- Botón reset (id == 8)
+    print("trianglesolved en ui.lua: " .. tostring(trianglesolved))
+    if trianglesolved == true then
+        DrawButton(ui_button_8.min_x*ui_unit.x, ui_button_8.min_y*ui_unit.y, 
+                   (ui_button_8.max_x-ui_button_8.min_x)*ui_unit.x, 
+                   (ui_button_8.max_y-ui_button_8.min_y)*ui_unit.y, 
+                   0.77, 0, 0, 8, "Reestablecer")
+    end
+
 end
 
 -- pos x, pos y, ancho, alto, r, g, b, id, texto
@@ -141,7 +181,7 @@ function DrawButton(x, y, w, h, r, g, b, id, text)
         love.graphics.setColor(0, 0.19, 0.26, 1)
     end
 
-    if id == 4 then
+    if id == 4 or id == 8 then
         love.graphics.setColor(1,1,1,1)
     end
     
@@ -245,16 +285,16 @@ function DrawTri()
 
     if ui.debug then
         love.graphics.setColor(1,1,1,0.25)
-        love.graphics.rectangle("fill", 25*ui_unit.x*0.5, ui_unit.y * 40, area.x, area.y)
+        love.graphics.rectangle("fill", baseX, baseY, area.x, area.y)
     end
 
     -- Obtener las dimensiones y origen del triángulo
     local triWidth, triHeight, originX, originY = GetTriangleDimensions(ui.scaledVertices)
     local offx, offy = Centrado(area.x, area.y, triWidth, triHeight)
     
-    -- Ajustar la traslación considerando el origen del triángulo
-    love.graphics.translate(25 * ui_unit.x * 0.5 + offx - originX, ui_unit.y * 40 + offy - originY)
-    love.graphics.setColor(1, 1, 1, 1)
+    -- Usar las coordenadas base guardadas
+    love.graphics.translate(baseX + offx - originX, baseY + offy - originY)
+love.graphics.setColor(1, 1, 1, 1)
     love.graphics.polygon("fill", ui.scaledVertices)
 
     -- Calcular puntos medios de los lados
@@ -337,14 +377,38 @@ function DrawTri()
     love.graphics.pop()
 end
 
+-- Lerp function
+local function lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+-- Add this function to reset the animation when vertices change
+function ui.resetAnimation()
+    ui.lerpFactor = 0
+    ui.isAnimating = true  -- Activar la animación
+end
+
+-- Agregar estas funciones al módulo
+function ui.setBaseCoordinates(x, y)
+    baseX = x
+    baseY = y
+end
+
+function ui.getBaseCoordinates()
+    return baseX, baseY
+end
+
 -- funciones que necesitan ser actualizadas constantemente
 
-function ui.actualizar()
+function ui.actualizar(dt)
     safe_x, safe_y, safe_w, safe_h = love.window.getSafeArea()
     ui_unit.x = safe_w / 100
     ui_unit.y = safe_h / 100
 
-    area = {x = 75*ui_unit.x, y = 40*ui_unit.y}
+    area = {
+        x = TRIANGLE_AREA.x_percent * ui_unit.x,
+        y = TRIANGLE_AREA.y_percent * ui_unit.y
+    }
 
     -- Use ui.vertices instead of vertices
     local triWidth, triHeight = GetTriangleDimensions(ui.vertices)
@@ -356,11 +420,37 @@ function ui.actualizar()
     -- Usar el factor más pequeño para mantener proporciones
     local scaleFactor = math.min(scaleX, scaleY)
 
-    -- Aplicar el factor de escala a los vértices del triángulo
+    -- Actualizar vértices objetivo
     for i = 1, #ui.vertices do
-        ui.scaledVertices[i] = ui.vertices[i] * scaleFactor
+        ui.targetVertices[i] = ui.vertices[i] * scaleFactor
     end
 
+    if ui.isAnimating then
+        -- Actualizar factor de interpolación solo si estamos animando
+        ui.lerpFactor = math.min(1, ui.lerpFactor + dt * ui.lerpSpeed)
+        
+        -- Aplicar interpolación
+        for i = 1, #ui.vertices do
+            ui.scaledVertices[i] = lerp(ui.scaledVertices[i], ui.targetVertices[i], ui.lerpFactor)
+        end
+
+        -- Desactivar animación cuando termine
+        if ui.lerpFactor >= 1 then
+            ui.isAnimating = false
+        end
+    else
+        -- Si no estamos animando, usar los valores directamente
+        for i = 1, #ui.vertices do
+            ui.scaledVertices[i] = ui.vertices[i] * scaleFactor
+        end
+    end
 end
+
+-- Exportar las funciones necesarias en la tabla ui
+ui.DrawTri = DrawTri
+ui.DrawNavUi = DrawNavUi
+ui.Textocentrado = Textocentrado
+ui.GetTriangleDimensions = GetTriangleDimensions
+ui.Centrado = Centrado
 
 return ui

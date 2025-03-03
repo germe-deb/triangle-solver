@@ -190,9 +190,30 @@ local function solveTriangle(triangle)
     return solved
 end
 
+local function resetTriangle(triangle)
+    -- Resetear ángulos
+    triangle.angles.A = nil
+    triangle.angles.B = nil
+    triangle.angles.C = nil
+    
+    -- Resetear lados
+    triangle.sides.a = nil
+    triangle.sides.b = nil
+    triangle.sides.c = nil
+    
+    -- Resetear vértices a posición por defecto
+    triangle.vertices.x1 = 0
+    triangle.vertices.y1 = 100
+    triangle.vertices.x2 = 100
+    triangle.vertices.y2 = 100
+    triangle.vertices.x3 = 50
+    triangle.vertices.y3 = 0
+end
+
 return {
     Triangle = Triangle,
     solveTriangle = solveTriangle,
     triangleToVertices = triangleToVertices,
-    angleSolver = angleSolver  -- Exportar angleSolver
+    angleSolver = angleSolver,
+    resetTriangle = resetTriangle  -- Exportar la nueva función
 }
