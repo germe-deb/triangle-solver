@@ -25,3 +25,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: love-actions/love-actions-core@v1
+      - uses: actions/upload-artifact@v4
+        with:
+            name: build
+            path: ./game.love
