@@ -40,9 +40,6 @@ jobs:
       run: |
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653"
         echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
-      
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
 
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
@@ -51,11 +48,17 @@ jobs:
         version_code: 1
         version_name: '1.0.0'
         package: 'com.example.trianglesolver'
-        resource-path: "./"
+        love-package: "~/work/triangle-solver/triangle-solver/game.love"
+        resource-path: "./assets/android/res"
         key_store: ${{ secrets.ANDROID_KEY_STORE }}
         key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
         key_store_password: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
         key_password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        output-folder: "~/work/triangle-solver/triangle-solver/"
+    
+    
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
