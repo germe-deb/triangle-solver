@@ -229,12 +229,12 @@ function love.update(dt)
 
     ui.setTriangleSolved(trianglesolved)
 
-    print("angle A: " .. tostring(solver.Triangle.angles.A))
-    print("angle B: " .. tostring(solver.Triangle.angles.B))
-    print("angle C: " .. tostring(solver.Triangle.angles.C))
-    print("side a: " .. tostring(solver.Triangle.sides.a))
-    print("side b: " .. tostring(solver.Triangle.sides.b))
-    print("side c: " .. tostring(solver.Triangle.sides.c))
+    -- print("angle A: " .. tostring(solver.Triangle.angles.A))
+    -- print("angle B: " .. tostring(solver.Triangle.angles.B))
+    -- print("angle C: " .. tostring(solver.Triangle.angles.C))
+    -- print("side a: " .. tostring(solver.Triangle.sides.a))
+    -- print("side b: " .. tostring(solver.Triangle.sides.b))
+    -- print("side c: " .. tostring(solver.Triangle.sides.c))
 end
 
 -- Modificar la función love.draw
@@ -371,7 +371,7 @@ function handleInteraction(x, y)
            touchX <= resetX + resetWidth and
            touchY >= resetY and 
            touchY <= resetY + resetHeight then
-            print("Reset button pressed!")  -- DEBUG
+            -- print("Reset button pressed!")  -- DEBUG
             resetValues()
             return
         end
@@ -539,5 +539,5 @@ function resetValues()
     love.keyboard.setTextInput(false)
     love.keyboard.hide()
 
-    print("values reseted")
+    -- print("values reseted")
 end

@@ -155,7 +155,7 @@ function DrawNavUi()
                1, 1, 1, 6, "Set")
 
     -- Botón reset (id == 8)
-    print("trianglesolved en ui.lua: " .. tostring(trianglesolved))
+    -- print("trianglesolved en ui.lua: " .. tostring(trianglesolved))
     if trianglesolved == true then
         DrawButton(ui_button_8.min_x*ui_unit.x, ui_button_8.min_y*ui_unit.y, 
                    (ui_button_8.max_x-ui_button_8.min_x)*ui_unit.x, 
