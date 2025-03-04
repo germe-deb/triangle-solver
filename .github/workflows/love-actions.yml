@@ -16,9 +16,21 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - name: Create .love file
       run: zip -7 -r game.love main.lua assets lib README.md LICENSES LICENSE
 
+    - name: Download and set up Android NDK
+      run: |
+        sdkmanager --install "ndk;25.2.9519653"
+        echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
+    
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
       with:
@@ -26,7 +38,7 @@ jobs:
         version_code: 1
         version_name: '1.0.0'
         package: 'com.example.trianglesolver'
-        resource-path: "./assets"
+        resource-path: "./"
         key_store: ${{ secrets.ANDROID_KEY_STORE }}
         key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
         key_store_password: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
