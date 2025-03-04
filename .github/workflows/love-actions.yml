@@ -24,13 +24,20 @@ jobs:
     - name: Create .love file
       run: zip -7 -r game.love main.lua assets lib README.md LICENSES LICENSE
 
-    - name: Download and set up Android NDK
+    - name: Set up Android SDK
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-11-jdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
+        unzip commandlinetools-linux-7583922_latest.zip -d $ANDROID_HOME/cmdline-tools
+        mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+        yes | sdkmanager --licenses
+
+    - name: Install NDK
       run: |
         sdkmanager --install "ndk;25.2.9519653"
         echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
-      env:
-        ANDROID_HOME: /usr/local/lib/android/sdk
-    
+
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
       with:
