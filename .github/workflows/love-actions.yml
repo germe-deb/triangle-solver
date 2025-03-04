@@ -1,41 +1,35 @@
-# This is a basic workflow to help you get started with Actions
+name: Build for Android
 
-name: Love actions for Android
-  
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build-android:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: love-actions/love-actions-android@v2
-        with:
-          app-name: "Triangle Solver"
-          bundle-id: "org.love2d.TriSolver"
-          resource-path: "./assets/android/res"
-          icon-specifier: "@mipmap/app"
-          love-ref: "0b0ff5551fae8b2079749481cd2b54adbbb25bd"
-          love-patch: "./love.patch"
-          love-package: "./game.love"
-          libs-path: "./assets/android/libs"
-          extra-assets: ./README.md ./license.txt
-          product-name: "my-game"
-          version-string: "2.3.4"
-          version-code: 234
-          output-folder: "./dist"
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Android APK
+      uses: love-actions/love-actions-android@v2
+      with:
+        love_file: triangle-solver.love  # Nombre del archivo .love que será generado y compilado
+        version_code: 1
+        version_name: '1.0.0'
+        package: 'com.example.trianglesolver'
+        key_store: ${{ secrets.ANDROID_KEY_STORE }}
+        key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+        key_store_password: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+        key_password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: triangle-solver-apk
+        path: build/app/outputs/apk/release/app-release.apk
