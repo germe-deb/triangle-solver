@@ -44,7 +44,8 @@ jobs:
     - name: List directory structure
       run: |
           echo "Listing root directory"
-          ls -R /
+          sudo apt install tree -y
+          tree ~/work -a
       
           echo "Listing working directory"
           ls -R $GITHUB_WORKSPACE
