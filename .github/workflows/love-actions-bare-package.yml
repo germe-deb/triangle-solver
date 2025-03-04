@@ -14,13 +14,13 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Create .love file
       run: zip -9 -r triangle-solver.love main.lua assets libs
 
     - name: Upload .love file
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: triangle-solver
         path: triangle-solver.love
