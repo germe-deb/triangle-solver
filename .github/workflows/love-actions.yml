@@ -26,6 +26,7 @@ jobs:
         version_code: 1
         version_name: '1.0.0'
         package: 'com.example.trianglesolver'
+        resource-path: "./assets"
         key_store: ${{ secrets.ANDROID_KEY_STORE }}
         key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
         key_store_password: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
