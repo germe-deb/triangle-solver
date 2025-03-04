@@ -15,6 +15,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+    
+    - name: Create .love file
+      run: zip -9 -r triangle-solver.love main.lua assets libs
 
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
