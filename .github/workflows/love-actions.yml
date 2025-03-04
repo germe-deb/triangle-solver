@@ -17,12 +17,12 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Create .love file
-      run: zip -9 -r triangle-solver.love main.lua assets lib README.md LICENSES LICENSE
+      run: zip -7 -r game.love main.lua assets lib README.md LICENSES LICENSE
 
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
       with:
-        love_file: triangle-solver.love  # Nombre del archivo .love que será generado y compilado
+        love_file: game.love  # Nombre del archivo .love que será generado y compilado
         version_code: 1
         version_name: '1.0.0'
         package: 'com.example.trianglesolver'
