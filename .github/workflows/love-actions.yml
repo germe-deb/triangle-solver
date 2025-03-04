@@ -41,9 +41,17 @@ jobs:
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653"
         echo "NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
   
+    - name: List directory structure
+      run: |
+          echo "Listing root directory"
+          ls -R /
+      
+          echo "Listing working directory"
+          ls -R $GITHUB_WORKSPACE
+
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      
+
     - name: Build Android APK
       uses: love-actions/love-actions-android@v2
       with:
